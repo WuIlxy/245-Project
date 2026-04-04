@@ -1,0 +1,17 @@
+streamlit
+numpy
+pandas
+polars
+matplotlib
+seaborn
+scikit-learn
+torch
+transformers
+pytorch-lightning
+kagglehub
+huggingface_hub
+dash
+dash-core-components
+dash-html-components
+dash-table
+plotly[express]
