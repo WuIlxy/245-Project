@@ -1,6 +1,3 @@
-openfda_processed.csv
-clinical_trials_raw.csv
-*.parquet
 __pycache__/
 *.pyc
 .DS_Store
