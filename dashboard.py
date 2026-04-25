@@ -35,7 +35,19 @@ OUTCOME_ORDER = ["COMPLETED", "TERMINATED", "WITHDRAWN"]
 OUTCOME_COLORS = {
     "COMPLETED": "#2E7D32",
     "TERMINATED": "#C62828",
-    "WITHDRAWN": "#6A1B9A",
+    "WITHDRAWN": "#1F6FEB",
+}
+METRIC_COLORS = {
+    "Macro F1": "#047D95",
+    "Accuracy": "#1F6FEB",
+    "Weighted F1": "#5BA9D6",
+}
+FEATURE_GROUP_COLORS = {
+    "Trial design": "#047D95",
+    "Sponsor": "#1F6FEB",
+    "OpenFDA signal": "#5BA9D6",
+    "Eligibility": "#63C7B2",
+    "Other": "#8AB6D6",
 }
 LOGISTIC_BASELINE_METRICS = {
     "name": "Logistic Regression Baseline",
@@ -258,7 +270,15 @@ def model_metric_figure(metrics: dict):
         return fig
 
     metric_df = pd.DataFrame(rows).melt(id_vars="model", var_name="metric", value_name="score")
-    fig = px.bar(metric_df, x="model", y="score", color="metric", barmode="group", title="Model Comparison")
+    fig = px.bar(
+        metric_df,
+        x="model",
+        y="score",
+        color="metric",
+        barmode="group",
+        title="Model Comparison",
+        color_discrete_map=METRIC_COLORS,
+    )
     fig.update_layout(margin=dict(l=20, r=20, t=50, b=20), height=380)
     fig.update_yaxes(range=[0, 1])
     return fig
@@ -344,6 +364,7 @@ def importance_figure(slug: str, kind: str, top_n: int):
         orientation="h",
         title=f"Top {top_n} Features",
         labels={"importance": kind.replace("_", " ").title(), "feature": "Feature"},
+        color_discrete_map=FEATURE_GROUP_COLORS,
     )
     fig.update_layout(margin=dict(l=20, r=20, t=50, b=20), height=max(420, top_n * 24))
     return fig
@@ -481,6 +502,39 @@ def build_app() -> Dash:
                         [
                             html.H1("Complete or Collapse?"),
                             html.Div("Clinical trial outcome modeling with trial design, sponsor, and OpenFDA signals.", className="subtitle"),
+                            html.Div(
+                                [
+                                    html.Div("Developed by Zheng Xing and Andrew Wong", className="byline"),
+                                    html.A(
+                                        html.Img(
+                                            src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
+                                            alt="GitHub repository",
+                                            className="github-logo",
+                                            style={
+                                                "width": "18px",
+                                                "height": "18px",
+                                                "maxWidth": "18px",
+                                                "maxHeight": "18px",
+                                                "objectFit": "contain",
+                                                "display": "block",
+                                            },
+                                        ),
+                                        href="https://github.com/WuIlxy/245-Project",
+                                        target="_blank",
+                                        title="Open GitHub repository",
+                                        className="github-button",
+                                        style={
+                                            "width": "26px",
+                                            "height": "26px",
+                                            "minWidth": "26px",
+                                            "maxWidth": "26px",
+                                            "minHeight": "26px",
+                                            "overflow": "hidden",
+                                        },
+                                    ),
+                                ],
+                                className="byline-row",
+                            ),
                         ],
                         className="title-block",
                     ),
@@ -488,7 +542,7 @@ def build_app() -> Dash:
                         [
                             metric_card("Joined Trials", f"{total_trials:,}", "drug-intervention subset"),
                             metric_card("OpenFDA Match", f"{matched_pct:.1f}%", "fuzzy drug-name join"),
-                            metric_card("Models", str(models_available), "Random Forest / XGBoost"),
+                            metric_card("Models", str(models_available), "Logistic Regression / Random Forest / XGBoost"),
                         ],
                         className="metric-row",
                     ),
@@ -873,40 +927,101 @@ app.index_string = """
             * { box-sizing: border-box; }
             body {
                 margin: 0;
-                font-family: Inter, Segoe UI, Arial, sans-serif;
-                background: #F6F7F9;
-                color: #17202A;
+                font-family: Nunito, Avenir Next, Aptos, Segoe UI, Arial, sans-serif;
+                background: #EAF7F9;
+                color: #102A43;
             }
-            .page { min-height: 100vh; }
+            .page {
+                min-height: 100vh;
+                --bg: #EAF7F9;
+                --surface: #FFFFFF;
+                --surface-soft: #F3FBFC;
+                --border: #B9DDE5;
+                --text: #102A43;
+                --muted: #577285;
+                --accent: #047D95;
+                --accent-strong: #025E73;
+                --accent-soft: #D8F3F6;
+                --shadow: rgba(18, 83, 105, 0.10);
+                background:
+                    linear-gradient(180deg, rgba(216, 243, 246, 0.95), rgba(234, 247, 249, 0.95) 260px),
+                    var(--bg);
+                color: var(--text);
+                transition: background 160ms ease, color 160ms ease;
+            }
             .header {
                 padding: 28px 36px 22px;
-                background: #FFFFFF;
-                border-bottom: 1px solid #DDE3EA;
+                background: var(--surface);
+                border-bottom: 1px solid var(--border);
                 display: flex;
                 justify-content: space-between;
                 gap: 24px;
                 align-items: center;
+                box-shadow: 0 8px 30px var(--shadow);
             }
-            h1 { margin: 0; font-size: 30px; letter-spacing: 0; }
-            .subtitle { color: #5F6B7A; margin-top: 8px; font-size: 15px; }
-            .metric-row { display: flex; gap: 12px; flex-wrap: wrap; }
+            h1 { margin: 0; font-size: 31px; letter-spacing: 0; font-weight: 850; color: var(--text); }
+            .subtitle { color: var(--muted); margin-top: 8px; font-size: 15px; }
+            .byline-row {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                margin-top: 10px;
+            }
+            .byline {
+                display: inline-block;
+                padding: 5px 7px 5px 10px;
+                border-radius: 999px;
+                background: var(--accent-soft);
+                color: var(--accent-strong);
+                font-size: 13px;
+                font-weight: 750;
+            }
+            .metric-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: stretch; justify-content: flex-end; }
             .metric-card {
                 min-width: 150px;
                 padding: 12px 14px;
-                border: 1px solid #DDE3EA;
-                background: #FAFBFC;
+                border: 1px solid var(--border);
+                background: var(--surface-soft);
                 border-radius: 8px;
             }
-            .metric-label { font-size: 12px; color: #5F6B7A; text-transform: uppercase; font-weight: 700; }
+            .metric-label { font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 800; }
             .metric-value { font-size: 24px; font-weight: 800; margin-top: 4px; }
-            .metric-note { font-size: 12px; color: #657282; margin-top: 2px; }
+            .metric-note { font-size: 12px; color: var(--muted); margin-top: 2px; }
+            .github-button {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 26px;
+                height: 26px;
+                min-width: 26px;
+                max-width: 26px;
+                border-radius: 999px;
+                border: 1px solid var(--border);
+                background: #FFFFFF;
+                text-decoration: none;
+                box-shadow: none;
+                overflow: hidden;
+            }
+            .github-button:hover {
+                border-color: var(--accent);
+                background: var(--accent-soft);
+                text-decoration: none;
+            }
+            .github-logo {
+                width: 18px !important;
+                height: 18px !important;
+                max-width: 18px !important;
+                max-height: 18px !important;
+                object-fit: contain;
+                display: block;
+            }
             .content { padding: 22px 28px 32px; }
             .card {
-                background: #FFFFFF;
-                border: 1px solid #DDE3EA;
+                background: var(--surface);
+                border: 1px solid var(--border);
                 border-radius: 8px;
                 padding: 16px;
-                box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+                box-shadow: 0 8px 24px var(--shadow);
             }
             .grid {
                 display: grid;
@@ -926,30 +1041,84 @@ app.index_string = """
                 font-size: 13px;
                 font-weight: 700;
                 margin-bottom: 6px;
-                color: #2B3440;
+                color: var(--text);
             }
             .control.wide { grid-column: span 2; }
             .control.full { grid-column: 1 / -1; }
             input[type="number"] {
                 width: 100%;
                 min-height: 38px;
-                border: 1px solid #CBD5E1;
+                border: 1px solid var(--border);
                 border-radius: 6px;
                 padding: 8px 10px;
                 font-size: 14px;
+                background: var(--surface);
+                color: var(--text);
             }
             .primary-button {
                 min-height: 40px;
                 border: 0;
                 border-radius: 6px;
-                background: #1F6FEB;
+                background: var(--accent);
                 color: white;
                 font-weight: 700;
                 cursor: pointer;
                 padding: 0 18px;
             }
+            .primary-button:hover { background: var(--accent-strong); }
             .prediction-summary h3 { margin: 0 0 8px; font-size: 24px; }
-            .prediction-summary p { margin: 8px 0; color: #4D5A68; }
+            .prediction-summary p { margin: 8px 0; color: var(--muted); }
+            .Select-control, .Select-menu-outer, .Select-value {
+                background: var(--surface) !important;
+                color: var(--text) !important;
+                border-color: var(--border) !important;
+            }
+            .Select-placeholder, .Select--single > .Select-control .Select-value {
+                color: var(--muted) !important;
+            }
+            input[type="checkbox"],
+            input[type="radio"] {
+                accent-color: var(--accent);
+            }
+            .tab {
+                background: #D8F3F6 !important;
+                color: #083B4C !important;
+                border-color: #B9DDE5 !important;
+                font-weight: 750;
+            }
+            .tab--selected {
+                background: #FFFFFF !important;
+                color: #025E73 !important;
+                border-top: 3px solid var(--accent) !important;
+            }
+            .rc-slider-track {
+                background-color: var(--accent) !important;
+            }
+            .rc-slider-handle {
+                border-color: var(--accent) !important;
+                background-color: var(--accent) !important;
+                box-shadow: 0 0 0 4px rgba(4, 125, 149, 0.16) !important;
+            }
+            .rc-slider-handle:focus,
+            .rc-slider-handle:hover,
+            .rc-slider-handle:active {
+                border-color: var(--accent-strong) !important;
+                box-shadow: 0 0 0 5px rgba(4, 125, 149, 0.20) !important;
+            }
+            .rc-slider-dot-active {
+                border-color: var(--accent) !important;
+            }
+            .rc-slider-mark-text-active {
+                color: var(--accent-strong) !important;
+            }
+            .dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner table {
+                color: var(--text) !important;
+            }
+            .js-plotly-plot .plotly .cursor-crosshair,
+            .js-plotly-plot .plotly .cursor-move,
+            .js-plotly-plot .plotly .cursor-pointer {
+                cursor: pointer !important;
+            }
             @media (max-width: 900px) {
                 .header { flex-direction: column; align-items: flex-start; }
                 .grid { grid-template-columns: 1fr; }
