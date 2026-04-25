@@ -5,6 +5,7 @@ Predicting whether a clinical trial will be **Completed**, **Terminated**, or **
 ## Group Members
 
 **Zheng**
+
 - Data collection and integration (ClinicalTrials.gov API pipeline)
 - Data cleaning and preprocessing (ClinicalTrials.gov)
 - Feature engineering
@@ -12,6 +13,7 @@ Predicting whether a clinical trial will be **Completed**, **Terminated**, or **
 - Feature importance and explainability
 
 **Andrew**
+
 - Data collection and integration (OpenFDA API pipeline)
 - Data cleaning and preprocessing (OpenFDA)
 - Exploratory data analysis and visualization
@@ -44,35 +46,18 @@ Clinical trials cost hundreds of millions of dollars per Phase 3 study. Identify
 
 ## Notebooks
 
-| Notebook | Description |
-|---|---|
-| `CTAPI.ipynb` | ClinicalTrials.gov API data collection |
-| `CTDataEDA.ipynb` | CT data preprocessing and EDA |
-| `OpenFDA_Data_Collection.ipynb` | OpenFDA API data collection |
-| `OpenFDA_Preprocess_EDA.ipynb` | OpenFDA preprocessing and EDA |
-| `Join_and_Preprocess.ipynb` | DuckDB join, fuzzy matching, feature engineering, hypothesis testing |
-| `Joined_EDA_and_Preprocessing.ipynb` | Joined dataset EDA, imputation, OHE, model-ready parquet |
-| `Baseline.ipynb` | Logistic regression baseline |
-| `Random_Forest_Model.ipynb` | Random Forest training and metrics |
-| `XGBoost_Model.ipynb` | XGBoost training and metrics |
-| `Explainability_Analysis.ipynb` | Feature importance, permutation importance, and SHAP summaries |
-
-## Pipeline
-
-Run the notebooks in this order:
-
-1. `CTAPI.ipynb`
-2. `CTDataEDA.ipynb`
-3. `OpenFDA_Data_Collection.ipynb`
-4. `OpenFDA_Preprocess_EDA.ipynb`
-5. `Join_and_Preprocess.ipynb`
-6. `Joined_EDA_and_Preprocessing.ipynb`
-7. `Baseline.ipynb`
-8. `Random_Forest_Model.ipynb`
-9. `XGBoost_Model.ipynb`
-10. `Explainability_Analysis.ipynb`
-
-The modeling notebooks write reusable files under `artifacts/`. The dashboard reads those files directly.
+| Notebook                             | Description                                                          |
+| ------------------------------------ | -------------------------------------------------------------------- |
+| `CTAPI.ipynb`                        | ClinicalTrials.gov API data collection                               |
+| `CTDataEDA.ipynb`                    | CT data preprocessing and EDA                                        |
+| `OpenFDA_Data_Collection.ipynb`      | OpenFDA API data collection                                          |
+| `OpenFDA_Preprocess_EDA.ipynb`       | OpenFDA preprocessing and EDA                                        |
+| `Join_and_Preprocess.ipynb`          | DuckDB join, fuzzy matching, feature engineering, hypothesis testing |
+| `Joined_EDA_and_Preprocessing.ipynb` | Joined dataset EDA, imputation, OHE, model-ready parquet             |
+| `Baseline.ipynb`                     | Logistic regression baseline                                         |
+| `Random_Forest_Model.ipynb`          | Random Forest training and metrics                                   |
+| `XGBoost_Model.ipynb`                | XGBoost training and metrics                                         |
+| `Explainability_Analysis.ipynb`      | Feature importance, permutation importance, and SHAP summaries       |
 
 ## Dashboard
 
@@ -88,6 +73,7 @@ Open `http://127.0.0.1:8050` in a browser.
 ## Key Challenges
 
 - **Partial join coverage** - OpenFDA only covers drugs/biologics; device and behavioral trials have no FDA record. Retained with `has_fda_record` flag.
-- **Class imbalance** - ~53% Completed / 37% Terminated / 11% Withdrawn. Addressed with `class_weight='balanced'` and macro F1 evaluation.
+- **Class imbalance** - ~53% Completed / 37% Terminated / 11% Withdrawn. Addressed with `class_weight='balanced'` and macro F1 evaluation across all three models.
 - **Drug name matching** - Brand vs. generic names, combination therapies. Solved with fuzzy matching at threshold 85.
 - **Label ambiguity** - Statuses like Suspended and Unknown excluded; only terminal statuses retained.
+- **Leak features** - Presence of leaky features such as `log_enrollment` that dominated predictions and unfeasible in real employment. Selectively removed during model training.
