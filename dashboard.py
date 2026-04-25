@@ -21,6 +21,7 @@ import polars as pl
 import plotly.express as px
 import plotly.graph_objects as go
 from dash import Dash, Input, Output, State, dash_table, dcc, html
+from dash.exceptions import PreventUpdate
 
 
 JOINED_PATH = Path("data/joined_dataset.parquet")
@@ -405,6 +406,12 @@ def categorical_options(prefix: str, feature_cols: list[str], fallback: list[str
     return [{"label": v.replace("_", " ").title(), "value": v} for v in values]
 
 
+def categorical_values(prefix: str, feature_cols: list[str], fallback: list[str]):
+    values = [c.replace(prefix, "", 1) for c in feature_cols if c.startswith(prefix)]
+    values = sorted(v for v in set(values) if v not in {"UNKNOWN", "NA"})
+    return values or fallback
+
+
 def set_dummy(vector: dict[str, float], feature_cols: list[str], prefix: str, value: str | None) -> None:
     for col in feature_cols:
         if col.startswith(prefix):
@@ -475,6 +482,85 @@ def prediction_figure(probabilities: np.ndarray):
     fig.update_layout(showlegend=False, margin=dict(l=20, r=20, t=50, b=20), height=360)
     fig.update_yaxes(range=[0, 1], tickformat=".0%")
     return fig
+
+
+def counterfactual_candidates(values: dict, feature_cols: list[str]) -> list[tuple[str, dict]]:
+    candidates: list[tuple[str, dict]] = []
+
+    for value in categorical_values("phases_", feature_cols, ["PHASE1", "PHASE2", "PHASE3", "PHASE4"]):
+        if value != values.get("phase"):
+            candidates.append((f"Phase -> {value}", {"phase": value}))
+
+    for value in categorical_values("sponsor_class_", feature_cols, ["INDUSTRY", "NIH", "OTHER"]):
+        if value != values.get("sponsor_class"):
+            candidates.append((f"Sponsor class -> {value}", {"sponsor_class": value}))
+
+    for value in categorical_values("masking_", feature_cols, ["NONE", "SINGLE", "DOUBLE", "TRIPLE"]):
+        if value != values.get("masking"):
+            candidates.append((f"Masking -> {value}", {"masking": value}))
+
+    for value in categorical_values("application_type_", feature_cols, ["NDA", "ANDA", "BLA"]):
+        if value != values.get("application_type"):
+            candidates.append((f"Application type -> {value}", {"application_type": value}))
+
+    numeric_steps = {
+        "num_sites": [1, 5, 10, 25, 50],
+        "num_primary_outcomes": [1, 2, 3, 5],
+        "num_secondary_outcomes": [0, 2, 5, 10],
+        "num_conditions": [1, 2, 4],
+        "num_drugs": [1, 2, 3],
+        "num_collaborators": [0, 1, 3, 5],
+    }
+    for key, options in numeric_steps.items():
+        current = values.get(key)
+        for option in options:
+            if current != option:
+                label = key.replace("num_", "").replace("_", " ").title()
+                candidates.append((f"{label} -> {option}", {key: option}))
+
+    for key, label in [
+        ("has_dmc", "DMC"),
+        ("healthy_volunteers", "Healthy volunteers"),
+        ("has_fda_record", "FDA record"),
+    ]:
+        current = int(values.get(key) or 0)
+        candidates.append((f"{label} -> {'Yes' if current == 0 else 'No'}", {key: 1 - current}))
+
+    return candidates
+
+
+def counterfactual_table(
+    model,
+    model_df: pl.DataFrame | None,
+    feature_cols: list[str],
+    values: dict,
+    base_completed_prob: float,
+    top_n: int = 8,
+) -> pd.DataFrame:
+    rows = []
+    for label, updates in counterfactual_candidates(values, feature_cols):
+        scenario = dict(values)
+        scenario.update(updates)
+        vector = build_prediction_vector(model_df, feature_cols, scenario)
+        completed_prob = float(model.predict_proba(vector)[0][0])
+        effect = completed_prob - base_completed_prob
+        if effect > 0:
+            rows.append(
+                {
+                    "Change": label,
+                    "Completed Probability": f"{completed_prob:.1%}",
+                    "Effect": f"+{effect:.1%}",
+                }
+            )
+
+    if not rows:
+        return pd.DataFrame({"Message": ["No single tested change increased Completed probability."]})
+
+    return pd.DataFrame(rows).sort_values(
+        "Effect",
+        key=lambda s: s.str.replace("+", "", regex=False).str.replace("%", "", regex=False).astype(float),
+        ascending=False,
+    ).head(top_n)
 
 
 def build_app() -> Dash:
@@ -773,12 +859,11 @@ def build_app() -> Dash:
                         )
                     ]
                 ),
-                html.Div(
-                    [
-                        card(dcc.Graph(id="prediction-chart"), "card"),
-                        card(html.Div(id="prediction-summary"), "card"),
-                    ],
-                    className="grid",
+                dcc.Loading(
+                    id="prediction-loading",
+                    type="circle",
+                    color="#047D95",
+                    children=html.Div(id="prediction-output"),
                 ),
             ]
         )
@@ -825,8 +910,7 @@ def build_app() -> Dash:
         return importance_figure(slug, kind, top_n), make_table(importance_table(slug, kind, top_n), page_size=top_n)
 
     @app.callback(
-        Output("prediction-chart", "figure"),
-        Output("prediction-summary", "children"),
+        Output("prediction-output", "children"),
         Input("predict-button", "n_clicks"),
         State("prediction-model", "value"),
         State("pred-phase", "value"),
@@ -845,7 +929,7 @@ def build_app() -> Dash:
         State("pred-flags", "value"),
     )
     def update_prediction(
-        _,
+        n_clicks,
         slug,
         phase,
         sponsor,
@@ -862,43 +946,54 @@ def build_app() -> Dash:
         max_age,
         flags,
     ):
+        if not n_clicks:
+            raise PreventUpdate
+
         if not slug or not feature_cols:
             fig = go.Figure()
             fig.add_annotation(text="Run the model notebooks to enable predictions.", x=0.5, y=0.5, showarrow=False)
-            return fig, html.Div("Model artifacts are missing.")
+            return html.Div([card(dcc.Graph(figure=fig), "card span-2")], className="grid")
 
         model = load_model(slug)
         if model is None:
             fig = go.Figure()
             fig.add_annotation(text="Selected model file is missing.", x=0.5, y=0.5, showarrow=False)
-            return fig, html.Div("Selected model file is missing.")
+            return html.Div([card(dcc.Graph(figure=fig), "card span-2")], className="grid")
 
         flags = flags or []
+        scenario_values = {
+            "phase": phase,
+            "sponsor_class": sponsor,
+            "sex": sex,
+            "masking": masking,
+            "application_type": application_type,
+            "num_sites": sites,
+            "num_primary_outcomes": primary,
+            "num_secondary_outcomes": secondary,
+            "num_conditions": conditions,
+            "num_drugs": drugs,
+            "num_collaborators": collaborators,
+            "min_age_years": min_age,
+            "max_age_years": max_age,
+            "has_fda_record": int("has_fda_record" in flags),
+            "has_dmc": int("has_dmc" in flags),
+            "healthy_volunteers": int("healthy_volunteers" in flags),
+        }
         vector = build_prediction_vector(
             model_df,
             feature_cols,
-            {
-                "phase": phase,
-                "sponsor_class": sponsor,
-                "sex": sex,
-                "masking": masking,
-                "application_type": application_type,
-                "num_sites": sites,
-                "num_primary_outcomes": primary,
-                "num_secondary_outcomes": secondary,
-                "num_conditions": conditions,
-                "num_drugs": drugs,
-                "num_collaborators": collaborators,
-                "min_age_years": min_age,
-                "max_age_years": max_age,
-                "has_fda_record": int("has_fda_record" in flags),
-                "has_dmc": int("has_dmc" in flags),
-                "healthy_volunteers": int("healthy_volunteers" in flags),
-            },
+            scenario_values,
         )
         probabilities = model.predict_proba(vector)[0]
         predicted_idx = int(np.argmax(probabilities))
         predicted_label = LABEL_NAMES[predicted_idx]
+        counterfactuals = counterfactual_table(
+            model=model,
+            model_df=model_df,
+            feature_cols=feature_cols,
+            values=scenario_values,
+            base_completed_prob=float(probabilities[0]),
+        )
         summary = html.Div(
             [
                 html.H3(f"Predicted: {predicted_label.title()}"),
@@ -907,7 +1002,24 @@ def build_app() -> Dash:
             ],
             className="prediction-summary",
         )
-        return prediction_figure(probabilities), summary
+        return html.Div(
+            [
+                card(dcc.Graph(figure=prediction_figure(probabilities)), "card"),
+                card(summary, "card"),
+                card(
+                    [
+                        html.H3("Counterfactual Sensitivity"),
+                        html.P(
+                            "These are the minimal changes to the trial that can increase Completed probability.",
+                            className="counterfactual-note",
+                        ),
+                        make_table(counterfactuals, page_size=8),
+                    ],
+                    "card span-2",
+                ),
+            ],
+            className="grid",
+        )
 
     return app
 
@@ -922,6 +1034,7 @@ app.index_string = """
         {%metas%}
         <title>{%title%}</title>
         {%favicon%}
+        <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
         {%css%}
         <style>
             * { box-sizing: border-box; }
@@ -1066,8 +1179,13 @@ app.index_string = """
                 padding: 0 18px;
             }
             .primary-button:hover { background: var(--accent-strong); }
+            #prediction-loading {
+                margin-top: 16px;
+                min-height: 120px;
+            }
             .prediction-summary h3 { margin: 0 0 8px; font-size: 24px; }
             .prediction-summary p { margin: 8px 0; color: var(--muted); }
+            .counterfactual-note { margin: 4px 0 12px; color: var(--muted); }
             .Select-control, .Select-menu-outer, .Select-value {
                 background: var(--surface) !important;
                 color: var(--text) !important;
