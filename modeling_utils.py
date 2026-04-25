@@ -23,6 +23,21 @@ FEATURE_COLUMNS_PATH = ARTIFACT_DIR / "feature_columns.json"
 LABEL_NAMES = {0: "COMPLETED", 1: "TERMINATED", 2: "WITHDRAWN"}
 SPLIT_YEAR = 2019
 NON_FEATURE = {"label", "overall_status", "start_year"}
+LEAKAGE_PRONE_COLS = {
+    "trial_duration_days",
+    "enrollment_actual",
+    "log_enrollment",
+}
+STRICT_DEPLOYMENT_EXCLUDE_PREFIXES = (
+    "marketing_status_",
+    "review_priority_",
+    "submission_type_",
+)
+STRICT_DEPLOYMENT_EXCLUDE_COLS = {
+    "approval_year",
+    "years_since_approval",
+    "priority_review",
+}
 RANDOM_STATE = 42
 
 
@@ -40,9 +55,12 @@ def load_model_ready() -> tuple[pl.DataFrame, list[str]]:
         c for c in df.columns
         if c not in NON_FEATURE and df.schema[c].is_numeric()
     ]
+    return df, feature_cols
+
+
+def save_feature_columns(feature_cols: list[str]) -> None:
     FEATURE_COLUMNS_PATH.parent.mkdir(parents=True, exist_ok=True)
     FEATURE_COLUMNS_PATH.write_text(json.dumps(feature_cols, indent=2), encoding="utf-8")
-    return df, feature_cols
 
 
 def temporal_split(df: pl.DataFrame, feature_cols: list[str]) -> tuple[np.ndarray, ...]:
@@ -54,6 +72,21 @@ def temporal_split(df: pl.DataFrame, feature_cols: list[str]) -> tuple[np.ndarra
     y_train = train["label"].to_numpy()
     y_test = test["label"].to_numpy()
     return x_train, x_test, y_train, y_test
+
+
+def remove_leakage_prone_features(feature_cols: list[str]) -> list[str]:
+    """Drop features not plausibly known near trial start."""
+    return [c for c in feature_cols if c not in LEAKAGE_PRONE_COLS]
+
+
+def remove_strict_deployment_risk_features(feature_cols: list[str]) -> list[str]:
+    """Drop fields that require time-aware FDA snapshots for strict deployment claims."""
+    base = remove_leakage_prone_features(feature_cols)
+    return [
+        c for c in base
+        if c not in STRICT_DEPLOYMENT_EXCLUDE_COLS
+        and not c.startswith(STRICT_DEPLOYMENT_EXCLUDE_PREFIXES)
+    ]
 
 
 def evaluate_model(
@@ -119,10 +152,24 @@ def load_saved_model(slug: str) -> Any:
     return joblib.load(MODEL_DIR / f"{slug}.joblib")
 
 
+def validate_model_feature_count(slug: str, model: Any, feature_cols: list[str]) -> None:
+    expected = getattr(model, "n_features_in_", None)
+    if expected is None and hasattr(model, "feature_importances_"):
+        expected = len(model.feature_importances_)
+
+    if expected is not None and expected != len(feature_cols):
+        raise ValueError(
+            f"{slug} was trained with {expected} features, but the current feature list has "
+            f"{len(feature_cols)}. Re-run Random_Forest_Model.ipynb and XGBoost_Model.ipynb "
+            "before running Explainability_Analysis.ipynb."
+        )
+
+
 def write_tree_importance(slug: str, model: Any, feature_cols: list[str]) -> Path | None:
     if not hasattr(model, "feature_importances_"):
         return None
 
+    validate_model_feature_count(slug, model, feature_cols)
     ensure_artifact_dirs()
     path = EXPLAIN_DIR / f"{slug}_feature_importance.csv"
     pl.DataFrame(
@@ -142,6 +189,7 @@ def write_permutation_importance(
     feature_cols: list[str],
     sample_size: int = 1500,
 ) -> Path:
+    validate_model_feature_count(slug, model, feature_cols)
     ensure_artifact_dirs()
     rng = np.random.default_rng(RANDOM_STATE)
     n = min(sample_size, len(y_test))
@@ -175,6 +223,7 @@ def write_shap_summary(
 ) -> Path:
     import shap
 
+    validate_model_feature_count(slug, model, feature_cols)
     ensure_artifact_dirs()
     rng = np.random.default_rng(RANDOM_STATE)
     n = min(sample_size, x_test.shape[0])
