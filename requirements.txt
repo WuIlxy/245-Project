@@ -5,6 +5,9 @@ polars
 matplotlib
 seaborn
 scikit-learn
+xgboost
+shap
+joblib
 torch
 transformers
 pytorch-lightning
