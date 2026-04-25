@@ -37,9 +37,10 @@ Clinical trials cost hundreds of millions of dollars per Phase 3 study. Identify
 - **Target:** 3-class outcome label (0 = Completed, 1 = Terminated, 2 = Withdrawn)
 - **Split:** Temporal - train on trials starting before 2019, test on 2019 and later
 - **Baseline:** Logistic regression with `class_weight='balanced'` and StandardScaler on numeric features - **Macro F1: 0.805**
-- **Planned models:** Random Forest, XGBoost
+- **Models:** Logistic Regression baseline, Random Forest, XGBoost
 - **Evaluation metric:** Macro F1 (treats all three classes equally regardless of frequency)
 - **Interpretability:** Feature importance + SHAP values
+- **Leakage audit:** Tree models remove `trial_duration_days`, `enrollment_actual`, and `log_enrollment` from the final saved feature set because these fields can encode information not available near trial start.
 
 ## Notebooks
 
@@ -52,6 +53,37 @@ Clinical trials cost hundreds of millions of dollars per Phase 3 study. Identify
 | `Join_and_Preprocess.ipynb` | DuckDB join, fuzzy matching, feature engineering, hypothesis testing |
 | `Joined_EDA_and_Preprocessing.ipynb` | Joined dataset EDA, imputation, OHE, model-ready parquet |
 | `Baseline.ipynb` | Logistic regression baseline |
+| `Random_Forest_Model.ipynb` | Random Forest training and metrics |
+| `XGBoost_Model.ipynb` | XGBoost training and metrics |
+| `Explainability_Analysis.ipynb` | Feature importance, permutation importance, and SHAP summaries |
+
+## Pipeline
+
+Run the notebooks in this order:
+
+1. `CTAPI.ipynb`
+2. `CTDataEDA.ipynb`
+3. `OpenFDA_Data_Collection.ipynb`
+4. `OpenFDA_Preprocess_EDA.ipynb`
+5. `Join_and_Preprocess.ipynb`
+6. `Joined_EDA_and_Preprocessing.ipynb`
+7. `Baseline.ipynb`
+8. `Random_Forest_Model.ipynb`
+9. `XGBoost_Model.ipynb`
+10. `Explainability_Analysis.ipynb`
+
+The modeling notebooks write reusable files under `artifacts/`. The dashboard reads those files directly.
+
+## Dashboard
+
+Install dependencies, run the model notebooks, then start the dashboard:
+
+```powershell
+pip install -r requirements.txt
+python dashboard.py
+```
+
+Open `http://127.0.0.1:8050` in a browser.
 
 ## Key Challenges
 
