@@ -1,0 +1,145 @@
+feature,mean_abs_shap
+num_sites,0.2317926585674286
+healthy_volunteers,0.08755215257406235
+is_fda_regulated_drug,0.07011241465806961
+sponsor_class_OTHER,0.05454431101679802
+sponsor_class_INDUSTRY,0.0489497184753418
+years_since_approval,0.04095638915896416
+num_secondary_outcomes,0.0406719371676445
+num_collaborators,0.03624048829078674
+approval_year,0.03623184561729431
+has_dmc,0.034371163696050644
+age_range_years,0.027042599394917488
+min_age_years,0.02658357284963131
+phases_PHASE2,0.02509414404630661
+masking_NONE,0.02240576222538948
+intervention_model_CROSSOVER,0.01960652321577072
+num_primary_outcomes,0.014263305813074112
+num_conditions,0.01387698482722044
+intervention_model_SINGLE_GROUP,0.012972117401659489
+intervention_model_SEQUENTIAL,0.011254617013037205
+num_drugs,0.010410231538116932
+phases_PHASE1,0.009744993411004543
+masking_UNKNOWN,0.009602297097444534
+phases_PHASE1|PHASE2,0.009431671351194382
+max_age_years,0.008068243972957134
+primary_purpose_UNKNOWN,0.00751717621460557
+phases_NA,0.0071598682552576065
+intervention_model_UNKNOWN,0.007077779155224562
+primary_purpose_PREVENTION,0.006783024407923222
+phases_PHASE3,0.00673870462924242
+sponsor_class_NIH,0.006121292244642973
+masking_DOUBLE,0.005571417044848204
+masking_SINGLE,0.0026222351007163525
+sponsor_class_OTHER_GOV,0.002232728525996208
+route_SUBCUTANEOUS,0.0016960083739832044
+masking_TRIPLE,0.0015630739508196712
+sex_MALE,0.0015115611022338271
+sponsor_class_NETWORK,0.001378784072585404
+dosage_form_CAPSULE,0.0011293741408735514
+primary_purpose_SUPPORTIVE_CARE,0.0009709122241474688
+dosage_form_SYSTEM,0.0009363204007968307
+dosage_form_TABLET,0.0008070305339060724
+mechanism_of_action_OTHER,0.0007963198586367071
+therapeutic_class_epc_Alkylating Drug [EPC],0.0007951703737489879
+sex_FEMALE,0.0007734440150670707
+route_TOPICAL,0.0007438391330651939
+dosage_form_INJECTABLE,0.0007328628562390804
+application_type_BLA,0.0007305258186534047
+phases_UNKNOWN,0.0006855108658783138
+mechanism_of_action_Glucagon-like Peptide-1 (GLP-1) Agonists [MoA],0.0006429422064684331
+therapeutic_class_epc_Programmed Death Receptor-1 Blocking Antibody [EPC],0.0006155812297947705
+application_type_NDA,0.0006104462663643062
+mechanism_of_action_Nucleic Acid Synthesis Inhibitors [MoA],0.0005211751558817923
+route_INJECTION,0.00048117974074557424
+primary_purpose_BASIC_SCIENCE,0.00042646750807762146
+therapeutic_class_epc_Insulin Analog [EPC],0.0004236152453813702
+mechanism_of_action_Vascular Endothelial Growth Factor Inhibitors [MoA],0.0004045542737003416
+route_INTRAVESICAL,0.00039188345544971526
+review_priority_PRIORITY,0.00038427981780841947
+therapeutic_class_epc_Leukocyte Growth Factor [EPC],0.00035395968006923795
+marketing_status_Over-the-counter,0.00033584790071472526
+therapeutic_class_epc_Vascular Endothelial Growth Factor Inhibitor [EPC],0.0003053162945434451
+therapeutic_class_epc_OTHER,0.00029376038582995534
+route_IV (INFUSION),0.0002716225862968713
+submission_type_SUPPL,0.00023061978572513908
+therapeutic_class_epc_Nucleoside Metabolic Inhibitor [EPC],0.00022475318110082299
+mechanism_of_action_Programmed Death Ligand-1 Antagonists [MoA],0.0002098363620461896
+dosage_form_EMULSION,0.0002066897286567837
+therapeutic_class_epc_Tumor Necrosis Factor Blocker [EPC],0.00018505136540625244
+review_priority_N/A,0.00018347929290030152
+has_fda_record,0.00018257228657603264
+phases_PHASE2|PHASE3,0.00017346195818390697
+dosage_form_SOLUTION/DROPS,0.0001599323150003329
+"dosage_form_SPRAY, METERED",0.00014982894936110824
+dosage_form_OINTMENT,0.00014613050734624267
+therapeutic_class_epc_Platinum-based Drug [EPC],0.0001418302272213623
+route_INTRAVENOUS,0.00014087912859395146
+mechanism_of_action_Programmed Death Receptor-1-directed Antibody Interactions [MoA],0.00012481919839046896
+intervention_model_FACTORIAL,0.00012324852286837995
+marketing_status_Discontinued,0.00011405783880036324
+dosage_form_VIAL,0.00011055167851736769
+"dosage_form_TABLET, DELAYED RELEASE",0.00010871391714317724
+mechanism_of_action_Alkylating Activity [MoA],0.00010033739818027243
+primary_purpose_HEALTH_SERVICES_RESEARCH,0.0000953784619923681
+dosage_form_SOLUTION,0.0000932217444642447
+primary_purpose_DIAGNOSTIC,0.00008115966920740902
+therapeutic_class_epc_General Anesthetic [EPC],0.00007384374475805089
+mechanism_of_action_Protein Kinase Inhibitors [MoA],0.0000681489982525818
+dosage_form_SYRINGE,0.00006517092697322369
+dosage_form_FOR SUSPENSION,0.000058759123930940405
+therapeutic_class_epc_Corticosteroid [EPC],0.000058282017562305555
+priority_review,0.00005365461765904911
+dosage_form_POWDER,0.000049778467655414715
+route_INTRAMUSCULAR,0.00004747112689074129
+mechanism_of_action_Proteasome Inhibitors [MoA],0.00004202968557365239
+dosage_form_SUSPENSION/DROPS,0.00004123711914871819
+route_OPHTHALMIC,0.00004059120692545548
+mechanism_of_action_CD20-directed Antibody Interactions [MoA],0.00004044689194415696
+dosage_form_SYRUP,0.00003925767305190675
+therapeutic_class_epc_Amide Local Anesthetic [EPC],0.00003833198934444226
+dosage_form_FOR SOLUTION,0.00003753268174477853
+therapeutic_class_epc_Atypical Antipsychotic [EPC],0.000037263031117618084
+phases_EARLY_PHASE1,0.00003669860598165542
+mechanism_of_action_Full Opioid Agonists [MoA],0.00003335242217872292
+dosage_form_INJECTION,0.000030365012207766995
+therapeutic_class_epc_CD20-directed Cytolytic Antibody [EPC],0.000029298511435627006
+route_TRANSDERMAL,0.000027271169528830796
+dosage_form_CREAM,0.00002680592479009647
+product_type_HUMAN OTC DRUG,0.000026357944079791196
+primary_purpose_SCREENING,0.000026158102627960034
+mechanism_of_action_Corticosteroid Hormone Receptor Agonists [MoA],0.00002515526102797594
+"route_INTRAVENOUS, SUBCUTANEOUS",0.00002476002737239469
+mechanism_of_action_Tumor Necrosis Factor Receptor Blocking Activity [MoA],0.000022232092305785045
+"dosage_form_CAPSULE, DELAYED RELEASE",0.000021412832211353816
+therapeutic_class_epc_GLP-1 Receptor Agonist [EPC],0.000020920489987474866
+dosage_form_GEL,0.00001951138438016642
+sponsor_class_INDIV,0.000018394632206764072
+dosage_form_LIQUID,0.000016308717022184283
+mechanism_of_action_Hydroxymethylglutaryl-CoA Reductase Inhibitors [MoA],0.00001541618985356763
+mechanism_of_action_Vascular Endothelial Growth Factor-directed Antibody Interactions [MoA],0.000014452913092100061
+mechanism_of_action_Acetylcholine Release Inhibitors [MoA],0.000013985126315674279
+marketing_status_None (Tentative Approval),0.000013248872164695058
+therapeutic_class_epc_Kinase Inhibitor [EPC],0.000012830539162678178
+"dosage_form_CAPSULE, EXTENDED RELEASE",0.000012170719855930656
+therapeutic_class_epc_Nonsteroidal Anti-inflammatory Drug [EPC],0.00001032201271300437
+"dosage_form_TABLET, FOR SUSPENSION",7.497994374716654e-6
+route_IRRIGATION,6.074075827200431e-6
+therapeutic_class_epc_Epidermal Growth Factor Receptor Antagonist [EPC],2.570841388660483e-6
+route_SINGLE-USE,2.245487166874227e-6
+review_priority_901 REQUIRED,9.040229542733869e-7
+primary_purpose_OTHER,0.0
+therapeutic_class_epc_HMG-CoA Reductase Inhibitor [EPC],0.0
+therapeutic_class_epc_Microtubule Inhibitor [EPC],0.0
+mechanism_of_action_Cyclooxygenase Inhibitors [MoA],0.0
+mechanism_of_action_Cytochrome P450 3A4 Inhibitors [MoA],0.0
+mechanism_of_action_Dipeptidyl Peptidase 4 Inhibitors [MoA],0.0
+mechanism_of_action_HER1 Antagonists [MoA],0.0
+route_INHALATION,0.0
+route_NASAL,0.0
+route_SOLUTION,0.0
+"dosage_form_CAPSULE, DELAYED REL PELLETS",0.0
+"dosage_form_FILM, EXTENDED RELEASE",0.0
+dosage_form_GAS,0.0
+"dosage_form_INJECTABLE, LIPOSOMAL",0.0
+dosage_form_SUSPENSION,0.0
