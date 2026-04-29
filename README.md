@@ -40,6 +40,7 @@ Clinical trials cost hundreds of millions of dollars per Phase 3 study. Identify
 - **Split:** Temporal - train on trials starting before 2019, test on 2019 and later
 - **Baseline:** Logistic regression with `class_weight='balanced'` and StandardScaler on numeric features - **Macro F1: 0.805**
 - **Models:** Logistic Regression baseline, Random Forest, XGBoost
+- **XGBoost tuning:** Grid search, random search, and Bayesian tuning with Optuna on an inner temporal validation split
 - **Evaluation metric:** Macro F1 (treats all three classes equally regardless of frequency)
 - **Interpretability:** Feature importance + SHAP values
 - **Leakage audit:** Tree models remove `trial_duration_days`, `enrollment_actual`, and `log_enrollment` from the final saved feature set because these fields can encode information not available near trial start.
@@ -57,7 +58,18 @@ Clinical trials cost hundreds of millions of dollars per Phase 3 study. Identify
 | `Baseline.ipynb`                     | Logistic regression baseline                                         |
 | `Random_Forest_Model.ipynb`          | Random Forest training and metrics                                   |
 | `XGBoost_Model.ipynb`                | XGBoost training and metrics                                         |
+| `xgboost_hyperparameter_tuning.py`   | XGBoost grid, random, and Bayesian hyperparameter tuning             |
 | `Explainability_Analysis.ipynb`      | Feature importance, permutation importance, and SHAP summaries       |
+
+## XGBoost Hyperparameter Tuning
+
+Run all three tuning methods after preprocessing:
+
+```powershell
+python xgboost_hyperparameter_tuning.py
+```
+
+The script trains candidate models on older pre-2019 trials, validates on the later pre-2019 slice, and keeps the 2019+ temporal test set untouched until the best tuned model is refit. It writes `artifacts/xgboost_tuning_results.csv`, `artifacts/xgboost_tuning_summary.json`, and `artifacts/models/xgboost_tuned.joblib`.
 
 ## Dashboard
 

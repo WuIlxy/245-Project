@@ -22,6 +22,7 @@ FEATURE_COLUMNS_PATH = ARTIFACT_DIR / "feature_columns.json"
 
 LABEL_NAMES = {0: "COMPLETED", 1: "TERMINATED", 2: "WITHDRAWN"}
 SPLIT_YEAR = 2019
+VALIDATION_START_YEAR = 2017
 NON_FEATURE = {"label", "overall_status", "start_year"}
 LEAKAGE_PRONE_COLS = {
     "trial_duration_days",
@@ -72,6 +73,40 @@ def temporal_split(df: pl.DataFrame, feature_cols: list[str]) -> tuple[np.ndarra
     y_train = train["label"].to_numpy()
     y_test = test["label"].to_numpy()
     return x_train, x_test, y_train, y_test
+
+
+def temporal_train_validation_test_split(
+    df: pl.DataFrame,
+    feature_cols: list[str],
+    validation_start_year: int = VALIDATION_START_YEAR,
+) -> tuple[np.ndarray, ...]:
+    """Split chronologically into tune-train, validation, and final test sets."""
+    if validation_start_year >= SPLIT_YEAR:
+        raise ValueError(
+            f"validation_start_year must be before SPLIT_YEAR={SPLIT_YEAR}; "
+            f"got {validation_start_year}."
+        )
+
+    train = df.filter(pl.col("start_year") < validation_start_year)
+    validation = df.filter(
+        (pl.col("start_year") >= validation_start_year)
+        & (pl.col("start_year") < SPLIT_YEAR)
+    )
+    test = df.filter(pl.col("start_year") >= SPLIT_YEAR)
+
+    if train.is_empty() or validation.is_empty() or test.is_empty():
+        raise ValueError(
+            "Temporal train/validation/test split produced an empty partition. "
+            "Choose a different validation_start_year."
+        )
+
+    x_train = train.select(feature_cols).to_numpy().astype(np.float32)
+    x_validation = validation.select(feature_cols).to_numpy().astype(np.float32)
+    x_test = test.select(feature_cols).to_numpy().astype(np.float32)
+    y_train = train["label"].to_numpy()
+    y_validation = validation["label"].to_numpy()
+    y_test = test["label"].to_numpy()
+    return x_train, x_validation, x_test, y_train, y_validation, y_test
 
 
 def remove_leakage_prone_features(feature_cols: list[str]) -> list[str]:
